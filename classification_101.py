@@ -50,6 +50,7 @@ try:
 
     import string
     from Susan_Classifier import *
+    from Susan_Mongo import *
 
     print "Great!  Looks like you're all set re: NLTK and Python."
 
@@ -69,7 +70,7 @@ except Exception, e:
 
 print "Defining Training Data (hand-coded in this case, see script source)"
 
-known_1 = ("fruity dark organic sweet chocolate", "miss")
+known_1 = ("fruity dark susan susan organic sweet susan chocolate", "miss")
 
 known_2 = ("interesting spicy dark bitter", "miss")
 
@@ -153,63 +154,74 @@ print "Training Naive Bayes Classifier"
 
 
 # Write my own Naives Bayes Classifier.
-susan_classifier = Susan_Classifier()
-# susan_nb = susan_classifier.create_dicts(train_set)
+# susan_classifier = Susan_Classifier()
+# susan_nb = susan_classifier.create_dicts(known_data_points)
+
 nb = nltk.NaiveBayesClassifier.train(train_set)
+
+susan_mongo = Susan_Mongo()
+# Insert the known data points into the mongodb called "naive"
+# susan_mongo.insert_all_collections(known_data_points)
 
 # raw_input("\n\nHit enter to continue...")
 
 #Make guesses about our unknown projects:
 
-# print "Predicting the class of unknown data points"
+print "Predicting the class of unknown data points"
 
 print "Prediction for unknown_1: "+str(nb.classify(feature_extracting_function(unknown_1)))
-print "Susan's Prediction for unknown_1: "+str(susan_classifier.predict_unknown_input(feature_extracting_function(unknown_1), train_set))
+# print "Susan's Prediction for unknown_1: "+str(susan_classifier.predict_unknown_input(feature_extracting_function(unknown_1), train_set))
+print "Susan's Prediction for unknown_1 (mongoDB): "+str(susan_mongo.predict_unknown_input(unknown_1))
+
 
 print "Prediction for unknown_2: "+str(nb.classify(feature_extracting_function(unknown_2)))
-print "Susan's Prediction for unknown_2: "+str(susan_classifier.predict_unknown_input(feature_extracting_function(unknown_2), train_set))
+# print "Susan's Prediction for unknown_2: "+str(susan_classifier.predict_unknown_input(feature_extracting_function(unknown_2), train_set))
+print "Susan's Prediction for unknown_2 (mongoDB): "+str(susan_mongo.predict_unknown_input(unknown_2))
+
 
 print "Prediction for unknown_3: "+str(nb.classify(feature_extracting_function(unknown_3)))
-print "Susan's Prediction for unknown_3: "+str(susan_classifier.predict_unknown_input(feature_extracting_function(unknown_3), train_set))
+# print "Susan's Prediction for unknown_3: "+str(susan_classifier.predict_unknown_input(feature_extracting_function(unknown_3), train_set))
+print "Susan's Prediction for unknown_3 (mongoDB): "+str(susan_mongo.predict_unknown_input(unknown_3))
+
 
 print "Prediction for unknown_4: "+str(nb.classify(feature_extracting_function(unknown_4)))
-print "Susan's Prediction for unknown_4: "+str(susan_classifier.predict_unknown_input(feature_extracting_function(unknown_4), train_set))
+# print "Susan's Prediction for unknown_4: "+str(susan_classifier.predict_unknown_input(feature_extracting_function(unknown_4), train_set))
+print "Susan's Prediction for unknown_4 (mongoDB): "+str(susan_mongo.predict_unknown_input(unknown_4))
+
+
+
+
+raw_input("\n\nHit enter to continue...")
+
+# Now get some insight as to how well the classifier performs in general.  The right way to do this is to have a test set of examples that were not used to train the classifier, because otherwise you're just asking for a false sense of confidence (it will report that it does very well--well, of course!  Of course it's gonna do well on the things you trained it on--what you want to see is whether it can handle new data or not).  Read more about test, train, and validation sets to do it better.  Google "10 fold cross validation" to get started on really doing it right.
+
+test_set = train_set #No no no no no.  Except for illustration cases like in a skillshare script, then yes. :P
+
+print "Evaluating Accuracy on Training Set (WARNING! This is just for illustration purposes, don't use train set for evaluation in practice!)"
+
+print "Accuracy: "+str(nltk.classify.accuracy(nb, test_set))
 
 
 
 
 
-# raw_input("\n\nHit enter to continue...")
+raw_input("\n\nHit enter to continue...")
 
-#Now get some insight as to how well the classifier performs in general.  The right way to do this is to have a test set of examples that were not used to train the classifier, because otherwise you're just asking for a false sense of confidence (it will report that it does very well--well, of course!  Of course it's gonna do well on the things you trained it on--what you want to see is whether it can handle new data or not).  Read more about test, train, and validation sets to do it better.  Google "10 fold cross validation" to get started on really doing it right.
+# Print the features that are most influential in making the decision of whether it's a good match or not.  Note that many of the features are presented in a format where the feature being "None" is meaningful; this is basically meant to be read as "When contains_word_(jams) is false/none, then that matters this much..."  See the nltk page referenced above for more info.
 
-# test_set = train_set #No no no no no.  Except for illustration cases like in a skillshare script, then yes. :P
+print "Let's look deeper into the classifier..."
 
-# print "Evaluating Accuracy on Training Set (WARNING! This is just for illustration purposes, don't use train set for evaluation in practice!)"
-
-# print "Accuracy: "+str(nltk.classify.accuracy(nb, test_set))
+print str(nb.show_most_informative_features(20))
 
 
 
 
 
-# raw_input("\n\nHit enter to continue...")
+raw_input("\n\nHit enter to continue...")
 
-#Print the features that are most influential in making the decision of whether it's a good match or not.  Note that many of the features are presented in a format where the feature being "None" is meaningful; this is basically meant to be read as "When contains_word_(jams) is false/none, then that matters this much..."  See the nltk page referenced above for more info.
+# Another interesting classifier, which can print out pseudocode for making a decision (just included in one line for fun).
 
-# print "Let's look deeper into the classifier..."
+print "Let's explore another (not NB) classifier, Decision Tree.  Because of the inherent structure of a Decision Tree classifier, we can print it out as a series of decisions made in pseudocode."
 
-# print str(nb.show_most_informative_features(20))
-
-
-
-
-
-# raw_input("\n\nHit enter to continue...")
-
-#Another interesting classifier, which can print out pseudocode for making a decision (just included in one line for fun).
-
-# print "Let's explore another (not NB) classifier, Decision Tree.  Because of the inherent structure of a Decision Tree classifier, we can print it out as a series of decisions made in pseudocode."
-
-# print nltk.DecisionTreeClassifier.train(train_set).pseudocode(depth=5)
+print nltk.DecisionTreeClassifier.train(train_set).pseudocode(depth=5)
 
